@@ -1,0 +1,12 @@
+﻿main.obj : error LNK2005: "void __cdecl cleanUp(void)" (?cleanUp@@YAXXZ) already defined in HW2.obj
+main.obj : error LNK2005: "void __cdecl generateReferenceImage(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> >,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> >,int)" (?generateReferenceImage@@YAXV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@0H@Z) already defined in HW2.obj
+main.obj : error LNK2005: "unsigned __int64 __cdecl numCols(void)" (?numCols@@YA_KXZ) already defined in HW2.obj
+main.obj : error LNK2005: "unsigned __int64 __cdecl numRows(void)" (?numRows@@YA_KXZ) already defined in HW2.obj
+main.obj : error LNK2005: "void __cdecl postProcess(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,struct uchar4 *)" (?postProcess@@YAXAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PEAUuchar4@@@Z) already defined in HW2.obj
+main.obj : error LNK2005: "void __cdecl preProcess(struct uchar4 * *,struct uchar4 * *,struct uchar4 * *,struct uchar4 * *,unsigned char * *,unsigned char * *,unsigned char * *,float * *,int *,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?preProcess@@YAXPEAPEAUuchar4@@000PEAPEAE11PEAPEAMPEAHAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z) already defined in HW2.obj
+main.obj : error LNK2005: "struct uchar4 * d_inputImageRGBA__" (?d_inputImageRGBA__@@3PEAUuchar4@@EA) already defined in HW2.obj
+main.obj : error LNK2005: "struct uchar4 * d_outputImageRGBA__" (?d_outputImageRGBA__@@3PEAUuchar4@@EA) already defined in HW2.obj
+main.obj : error LNK2005: "float * h_filter__" (?h_filter__@@3PEAMEA) already defined in HW2.obj
+main.obj : error LNK2005: "class cv::Mat imageInputRGBA" (?imageInputRGBA@@3VMat@cv@@A) already defined in HW2.obj
+main.obj : error LNK2005: "class cv::Mat imageOutputRGBA" (?imageOutputRGBA@@3VMat@cv@@A) already defined in HW2.obj
+C:\Users\zhang\Documents\cuda\problem2\x64\Debug\problem2.exe : fatal error LNK1169: one or more multiply defined symbols found
