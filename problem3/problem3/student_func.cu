@@ -348,7 +348,7 @@ void your_histogram_and_prefixsum(const float* const d_logLuminance,
   delete [] h_max_among_block;
   */
 
-  shmem_max_kernel <<< 1, threads, threads * sizeof(float) >> > (d_max,
+  shmem_max_kernel <<< 1, threads, threads * sizeof(float) >>> (d_max,
 																  d_max_among_block,
 																  blocks
 																  );
@@ -427,6 +427,8 @@ void your_histogram_and_prefixsum(const float* const d_logLuminance,
 		printf("%d/%d ", h_hist[i], h_hist2[i]);
   }
   printf("\n");
+  delete []h_hist;
+  delete []h_hist2;
   */
   
 
@@ -448,6 +450,7 @@ void your_histogram_and_prefixsum(const float* const d_logLuminance,
 	  cout<<h_cdf[i]<<" ";
   }
   cout << endl;
+  delete []h_cdf;
   */
 
   cudaDeviceSynchronize(); checkCudaErrors(cudaGetLastError());
@@ -458,6 +461,8 @@ void your_histogram_and_prefixsum(const float* const d_logLuminance,
   checkCudaErrors(cudaFree(d_min_among_block));
   checkCudaErrors(cudaFree(d_max_among_block));
   checkCudaErrors(cudaFree(d_hist));
+  checkCudaErrors(cudaFree(d_hist_bin));
+  checkCudaErrors(cudaFree(d_hist2));
 
   cudaDeviceSynchronize(); checkCudaErrors(cudaGetLastError());
 }
