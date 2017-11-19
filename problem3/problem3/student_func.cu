@@ -85,6 +85,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <cuda_runtime.h>
+#include <time.h>
 
 using namespace std;
 ///shared memory reduced min kernel
@@ -212,6 +213,37 @@ void shmem_generate_histogram
 		atomicAdd(&histogram[bin], 1);
 	}
 }
+__global__
+void shmem_generate_hist_bin
+(
+	const float* const d_logLuminance,
+	unsigned int* hist_bin,
+	float lumRange,
+	float min_loglum,
+	const size_t numBins,
+	const size_t size
+)
+{
+	int myId = blockIdx.x*blockDim.x + threadIdx.x;
+	if (myId < size) {
+		float lum = d_logLuminance[myId];
+		int bin = int((lum - min_loglum) / lumRange * float(numBins));
+		__syncthreads();
+		atomicAdd(&hist_bin[blockIdx.x*blockDim.x+bin], 1);
+	}
+}
+__global__
+void shmem_combine_hist_bin
+(
+	unsigned int* hist_bin,
+	unsigned int* hist
+)
+{
+	int myId = blockIdx.x*blockDim.x + threadIdx.x;
+	int tid = threadIdx.x;
+	__syncthreads();
+	atomicAdd(&hist[tid], hist_bin[myId]);
+}
 void your_histogram_and_prefixsum(const float* const d_logLuminance,
                                   unsigned int* const d_cdf,
                                   float &min_logLum,
@@ -256,7 +288,8 @@ void your_histogram_and_prefixsum(const float* const d_logLuminance,
   float *d_min_among_block;
   float *d_max_among_block;
   unsigned int *d_hist;
-  unsigned int *cdf_out;
+  unsigned int *d_hist2;
+  unsigned int *d_hist_bin;
   float range;
 
   //assign gpu memory to data
@@ -265,6 +298,8 @@ void your_histogram_and_prefixsum(const float* const d_logLuminance,
   checkCudaErrors(cudaMalloc((void**)&d_hist, numBins * sizeof(unsigned int)));
   checkCudaErrors(cudaMalloc((void**)&d_min_among_block, blocks * sizeof(float)));
   checkCudaErrors(cudaMalloc((void**)&d_max_among_block, blocks * sizeof(float)));
+  checkCudaErrors(cudaMalloc((void**)&d_hist2, numBins * sizeof(unsigned int)));
+  checkCudaErrors(cudaMalloc((void**)&d_hist_bin, numBins * blocks * sizeof(unsigned int)));
   
   /*
   1) find the minimum and maximum value in the input logLuminance channel
@@ -339,6 +374,13 @@ void your_histogram_and_prefixsum(const float* const d_logLuminance,
   */
 
   //generate histogram of the image
+  //compute kernel time for each method
+  cudaEvent_t start, stop;
+  float time;
+  cudaEventCreate(&start);
+  cudaEventCreate(&stop);
+  cudaEventRecord(start, 0);
+  //method 1 only use atom to add values to each bin
   shmem_generate_histogram <<< blocks, threads, threads * sizeof(float) >>> (d_logLuminance,
 													d_hist,
 													range,
@@ -347,17 +389,46 @@ void your_histogram_and_prefixsum(const float* const d_logLuminance,
 													size
 													);
   cudaDeviceSynchronize(); checkCudaErrors(cudaGetLastError());
+  cudaEventRecord(stop, 0);
+  cudaEventSynchronize(stop);
+  cudaEventElapsedTime(&time, start, stop);
+  printf("Time for the kernel: %f ms\n", time);
 
+
+  cudaEventRecord(start, 0);
+
+  //method 2 first generate first atom computation the histogram of each block
+  shmem_generate_hist_bin <<< blocks, threads, threads * sizeof(float) >>> (d_logLuminance,
+	  d_hist_bin,
+	  range,
+	  min_logLum,
+	  numBins,
+	  size
+	  );
+  cudaDeviceSynchronize(); checkCudaErrors(cudaGetLastError());
+
+  //then atom computation among those blocks
+  shmem_combine_hist_bin <<< blocks, threads, threads * sizeof(unsigned int) >>> (d_hist_bin, d_hist2);
+  cudaEventRecord(stop, 0);
+  cudaEventSynchronize(stop);
+  cudaEventElapsedTime(&time, start, stop);
+  printf("Time for the kernel2: %f ms\n", time);
+  cudaEventDestroy(start);
+  cudaEventDestroy(stop);
   /*
-  //check the value of histogram
+  //check the value of histogram values of method 1 and method 2
   unsigned int *h_hist;
   h_hist= new unsigned int[numBins];
   checkCudaErrors(cudaMemcpy(h_hist, d_hist, numBins * sizeof(unsigned int), cudaMemcpyDeviceToHost));
+  unsigned int *h_hist2;
+  h_hist2 = new unsigned int[numBins];
+  checkCudaErrors(cudaMemcpy(h_hist2, d_hist2, numBins * sizeof(unsigned int), cudaMemcpyDeviceToHost));
   for (int i = 0; i < numBins; i++) {
-		printf("%d ", h_hist[i]);
+		printf("%d/%d ", h_hist[i], h_hist2[i]);
   }
   printf("\n");
   */
+  
 
   cudaDeviceSynchronize(); checkCudaErrors(cudaGetLastError());
   /*
@@ -365,7 +436,7 @@ void your_histogram_and_prefixsum(const float* const d_logLuminance,
        the cumulative distribution of luminance values (this should go in the
        incoming d_cdf pointer which already has been allocated for you)       */
   
-  shmem_prefix_sum_kernel <<< blocks, threads / 2, 2*numBins * sizeof(unsigned int) >>> ( d_cdf, d_hist, numBins);
+  shmem_prefix_sum_kernel <<< blocks, threads / 2, 2*numBins * sizeof(unsigned int) >>> ( d_cdf, d_hist2, numBins);
   cudaDeviceSynchronize(); checkCudaErrors(cudaGetLastError());
 
   /*
