@@ -7,3 +7,5 @@
 ## finished problems
     1.problems2: Image Blur using CUDA 
     2.problems3: Histogram and CDF generation
+    3.problems4: Parallel Sorting
+    4.problems5: Efficient Histogram 5.568ms(estimated by Nivida Visual Profiler)
