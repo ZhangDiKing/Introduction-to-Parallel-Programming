@@ -9,4 +9,5 @@
 ### problems 3: Histogram and CDF generation
 ### problems 4: Parallel Sorting 
 ### problems 5: Efficient Histogram (5.568ms Estimated by visual profile)
+### problems 6: Seamless Image Cloning
 

@@ -59,18 +59,6 @@ void shmem_combine_hist_bin
 	__syncthreads();
 	atomicAdd(&hist[tid], smdata[tid]);
 }
-__global__
-void yourHisto(const unsigned int* const vals, //INPUT
-               unsigned int* const histo,      //OUPUT
-               int numVals)
-{
-  //TODO fill in this kernel to calculate the histogram
-  //as quickly as possible
-
-  //Although we provide only one kernel skeleton,
-  //feel free to use more if it will help you
-  //write faster code
-}
 
 void computeHistogram(const unsigned int* const d_vals, //INPUT
                       unsigned int* const d_histo,      //OUTPUT
@@ -88,8 +76,7 @@ void computeHistogram(const unsigned int* const d_vals, //INPUT
 	}
 	int blocks = numElems / maxThreadsPerBlock + remain;
 	//printf("%d", blocks);
-  //if you want to use/launch more than one kernel,
-  //feel free
+
 	unsigned int *d_hist_bin;
 	checkCudaErrors(cudaMalloc((void**)&d_hist_bin, numBins * blocks * sizeof(unsigned int)));
 
