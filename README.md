@@ -1,8 +1,8 @@
 # Introduction-to-Parallel-Programming
-    Practice of cuda programming
+The assignment for Udacity courses: Introduction to Parallel Programming.
     
 ## Configuration
-    opencv 3.3.1 + Visual Studio 2015(x64 Release) + CUDA 8.0 + Win 10 + GTX 960m
+opencv 3.3.1 + Visual Studio 2015(x64 Release) + CUDA 8.0 + Win 10 + GTX 960m
  
 ## Finished problems
 ### problems 2: Image Blur using CUDA 
